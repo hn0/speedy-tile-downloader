@@ -26,6 +26,7 @@ public class TileDownloader implements Runnable {
 	// Variables
 	private String tileService;
 	private String destPath;
+	private String headers[][];
 
 	private int zoomLevelStartIndex = 0;
 	private int zoomLevelEndIndex = 0;
@@ -110,9 +111,9 @@ public class TileDownloader implements Runnable {
 					final byte[] imgBytes;
 					
 					if(this.getTileService().toUpperCase().startsWith("HTTPS")){
-						imgBytes = this.getImageByteArrayHTTPS(tileServiceImg);
+						imgBytes = this.getImageByteArrayHTTPS(tileServiceImg, headers);
 					}else{
-						imgBytes = this.getImageByteArrayHTTP(tileServiceImg);
+						imgBytes = this.getImageByteArrayHTTP(tileServiceImg, headers);
 					}
 					
 					if (imgBytes == null) {
@@ -150,7 +151,7 @@ public class TileDownloader implements Runnable {
 	 * @param urlStr
 	 * @return
 	 */
-	private byte[] getImageByteArrayHTTP(final String urlStr) {
+	private byte[] getImageByteArrayHTTP(final String urlStr, final String headers[][]) {
 		try {
 			final URL url = new URL(urlStr);
 			final InputStream in = new BufferedInputStream(url.openStream());
@@ -177,10 +178,16 @@ public class TileDownloader implements Runnable {
 	 * @param urlStr
 	 * @return
 	 */
-	private byte[] getImageByteArrayHTTPS(final String urlStr) {
+	private byte[] getImageByteArrayHTTPS(final String urlStr, final String headers[][]) {
 		try {
 			URL url = new URL(urlStr);
 			HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+
+			for( String[] header : headers ){
+				con.setRequestProperty( header[0], header[1]);
+			}
+
+
 			if (con == null){
 				return null;
 			}
@@ -294,6 +301,10 @@ public class TileDownloader implements Runnable {
 
 	public void setyEndIndex(int yEndIndex) {
 		this.yEndIndex = yEndIndex;
+	}
+
+	public void setHeaders(String headers[][]){
+		this.headers = headers;
 	}
 	
 	@Override
