@@ -27,6 +27,7 @@ public class TileDownloader implements Runnable {
 	private String tileService;
 	private String destPath;
 	private String headers[][];
+	private double extent[] = {0, 0, 0, 0};
 
 	private int zoomLevelStartIndex = 0;
 	private int zoomLevelEndIndex = 0;
@@ -95,10 +96,15 @@ public class TileDownloader implements Runnable {
 
 				for (int y = yStart; y <= yEnd; y++) {
 
+					// test for xy
+					if( !this.inExtent(x, y, z) ){
+						continue;
+					}
+
 					destImgPath = getDestPath() + "/" + z + "/" + x;
 					destImgName = y + ".png";
-					tileServiceImg = getTileService() + "/" + z + "/" + x + "/" + y
-							+ ".png";
+					tileServiceImg = getTileService() + "/" + z + "/" + x + "/" + y;
+							// + ".png";
 					
 					//Check if image exist.
 					File checkFile = new File(destImgPath + "/" + destImgName);
@@ -106,7 +112,7 @@ public class TileDownloader implements Runnable {
 //						System.out.println("EXIST : " + destImgPath + "/" + destImgName);
 						continue;
 					}
-//					System.out.println("DOWNLOAD : " + destImgPath + "/" + destImgName);
+					// System.out.println("DOWNLOAD : " + destImgPath + "/" + destImgName);
 
 					final byte[] imgBytes;
 					
@@ -118,6 +124,7 @@ public class TileDownloader implements Runnable {
 					
 					if (imgBytes == null) {
 						// TODO : SAVE & TERMINATE || WAIT TO GET CONN
+						System.out.println( "Empty image bytes response, url:" + tileServiceImg );
 						return;
 					}
 
@@ -126,6 +133,7 @@ public class TileDownloader implements Runnable {
 
 					if (!writeResult) {
 						// TODO : SAVE & TERMINATE || WAIT TO GET CONN
+						System.out.println( "Cannot save the image, url:" + tileServiceImg );
 						return;
 					}
 
@@ -144,6 +152,26 @@ public class TileDownloader implements Runnable {
 			xStartIndex = 0;
 		}
 		System.out.println("COMPLATED!");
+	}
+
+	/**
+	 * Check if given tile is within given extent
+	 *
+	 */
+	private boolean inExtent( int x, int y, int z ){
+		int n = (int) Math.pow( 2, z );
+		double lat  = Math.atan( Math.sinh( Math.PI * (1 - (double) (2 * y) / n ) ) ) * 180 / Math.PI;
+		double lng  = (double) x / n * 360 - 180;
+
+		// System.out.format( "%d: %f %f\n", x, lat, lng );
+
+		if( lat >= this.extent[1] && lat <= this.extent[3] &&
+			lng >= this.extent[0] && lng <= this.extent[2]
+			){
+			// System.out.format( "Download: x:%d y:%d z:%d\n", x, y, z );
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -199,9 +227,9 @@ public class TileDownloader implements Runnable {
 			while (-1 != (n = in.read(buf))) {
 				out.write(buf, 0, n);
 			}
-			
 			out.close();
 			in.close();
+
 			final byte[] response = out.toByteArray();
 			return response;						
 		} catch (final Exception e) {
@@ -305,6 +333,10 @@ public class TileDownloader implements Runnable {
 
 	public void setHeaders(String headers[][]){
 		this.headers = headers;
+	}
+
+	public void setExtent(double extent[]){
+		this.extent = extent;
 	}
 	
 	@Override

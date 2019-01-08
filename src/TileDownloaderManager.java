@@ -23,9 +23,10 @@ public class TileDownloaderManager {
 	private final static String tileService = "https://tiles.mapire.eu/mercator/cadastral";
 	private final static String destPath = "/home/user/tiles_tmp/pag";
 	private final static String headers[][] = { 
-		{"Accept", "image/webp,image/apng,image/*,*/*;q=0.8"}, 
-		{"Referer", "https://mapire.eu/en/map/cadastral/?bbox=1471886.7950656265%2C5456935.574662946%2C1877003.0449770605%2C5640384.44254737&map-list=1&layers=osm%2C3%2C4"} 
+		{"Accept", " image/webp,image/apng,image/*,*/*;q=0.8"},
+		{"Referer", " https://mapire.eu/en/map/cadastral/?bbox=1471886.7950656265%2C5456935.574662946%2C1877003.0449770605%2C5640384.44254737"} 
 	};
+	private final static double extent[] = {13.411, 42.3279, 19.5741, 46.625};
 	private final static int zoomStart = 9;
 	private final static int zoomEnd = 18;
 	
@@ -36,8 +37,8 @@ public class TileDownloaderManager {
 	 */
 	public static void main(String[] args) {
 		TileDownloaderManager tileDownloaderManager = new TileDownloaderManager();
-		//tileDownloaderManager.downloadTilesSingleThread(tileService, destPath, zoomStart, zoomEnd);
-		tileDownloaderManager.downloadTilesMultiThread(tileService, destPath, zoomStart, zoomEnd, headers);
+		// tileDownloaderManager.downloadTilesSingleThread(tileService, destPath, zoomStart, zoomEnd, headers);
+		tileDownloaderManager.downloadTilesMultiThread(tileService, destPath, zoomStart, zoomEnd, headers, extent);
 	}
 	
 	/**
@@ -93,7 +94,7 @@ public class TileDownloaderManager {
 	 * ZOOM : 5 		Thd : 15( 2^5/2 -1 )
 	 * ZOOM : X >= 6	Thd : 32
 	 */
-	private void downloadTilesMultiThread(final String tileService, final String destPath, int zStart, int zEnd, final String headers[][]) {
+	private void downloadTilesMultiThread(final String tileService, final String destPath, int zStart, int zEnd, final String headers[][], double extent[]) {
 		
 		int zoomStart = zStart;
 		int zoomEnd = zEnd;
@@ -147,6 +148,7 @@ public class TileDownloaderManager {
 				tileDownloader.setxEndIndex(xEnd);
 				tileDownloader.setyEndIndex(0);
 				tileDownloader.setHeaders(headers);
+				tileDownloader.setExtent( extent );
 
 				System.out.println("xStart:" + xStart + " xEnd:" + xEnd);
 				Thread tileDownloaderThread = new Thread(tileDownloader);
